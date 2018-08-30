@@ -1,0 +1,297 @@
+<!doctype html>
+<html class="default no-js">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>@iov/ledger-bns Documentation</title>
+	<meta name="description" content="">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+<header>
+	<div class="tsd-page-toolbar">
+		<div class="container">
+			<div class="table-wrap">
+				<div class="table-cell" id="tsd-search" data-index="assets/js/search.js" data-base=".">
+					<div class="field">
+						<label for="tsd-search-field" class="tsd-widget search no-caption">Search</label>
+						<input id="tsd-search-field" type="text" />
+					</div>
+					<ul class="results">
+						<li class="state loading">Preparing search index...</li>
+						<li class="state failure">The search index is not available</li>
+					</ul>
+					<a href="index.html" class="title">@iov/ledger-bns Documentation</a>
+				</div>
+				<div class="table-cell" id="tsd-widgets">
+					<div id="tsd-filter">
+						<a href="#" class="tsd-widget options no-caption" data-toggle="options">Options</a>
+						<div class="tsd-filter-group">
+							<div class="tsd-select" id="tsd-filter-visibility">
+								<span class="tsd-select-label">All</span>
+								<ul class="tsd-select-list">
+									<li data-value="public">Public</li>
+									<li data-value="protected">Public/Protected</li>
+									<li data-value="private" class="selected">All</li>
+								</ul>
+							</div>
+							<input type="checkbox" id="tsd-filter-inherited" checked />
+							<label class="tsd-widget" for="tsd-filter-inherited">Inherited</label>
+							<input type="checkbox" id="tsd-filter-externals" checked />
+							<label class="tsd-widget" for="tsd-filter-externals">Externals</label>
+						</div>
+					</div>
+					<a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="tsd-page-title">
+		<div class="container">
+			<ul class="tsd-breadcrumb">
+				<li>
+					<a href="globals.html">Globals</a>
+				</li>
+			</ul>
+			<h1> @iov/ledger-bns Documentation</h1>
+		</div>
+	</div>
+</header>
+<div class="container container-main">
+	<div class="row">
+		<div class="col-8 col-content">
+			<div class="tsd-panel tsd-typography">
+				<h1 id="-iov-ledger-bns">@iov/ledger-bns</h1>
+				<p><a href="https://www.npmjs.com/package/@iov/ledger-bns"><img src="https://img.shields.io/npm/v/@iov/ledger-bns.svg" alt="npm version"></a></p>
+				<p>This package provides an adaptor to use the bns ledger app as a keyring entry.
+					The app is still in dev mode and not available in the ledger store, so
+				this is really for cutting edge devs now.</p>
+				<h2 id="getting-started">Getting started</h2>
+				<p>Create a LedgerSimpleAddressKeyringEntry for signing with a Ledger. All
+				further functionality is provided by the <code>UserProfile</code>.</p>
+				<pre><code class="language-ts"><span class="hljs-keyword">import</span> { UserProfile } <span class="hljs-keyword">from</span> <span class="hljs-string">"@iov/core"</span>;
+<span class="hljs-keyword">import</span> { LedgerSimpleAddressKeyringEntry } <span class="hljs-keyword">from</span> <span class="hljs-string">"@iov/ledger-bns"</span>;
+
+<span class="hljs-keyword">const</span> profile = <span class="hljs-keyword">new</span> UserProfile();
+profile.addEntry(<span class="hljs-keyword">new</span> LedgerSimpleAddressKeyringEntry());</code></pre>
+				<p>The @iov/cli <a href="https://github.com/iov-one/iov-core/tree/master/packages/iov-cli#ledger-usage">provides further examples</a>
+				of how to use this keyring entry.</p>
+				<h3 id="observing-ledger-state">Observing Ledger state</h3>
+				<p>An application may want to react to state changes of the ledger connection. There
+				are two interfaces to do so: <code>readonly canSign: ValueAndUpdates&lt;boolean&gt;</code> and <code>readonly deviceState: ValueAndUpdates&lt;LedgerState&gt;</code>.</p>
+				<p><code>canSign</code> is provided for every keyring entry and works as follows:</p>
+				<pre><code class="language-ts"><span class="hljs-keyword">const</span> ledgerEntry = <span class="hljs-keyword">new</span> LedgerSimpleAddressKeyringEntry();
+ledgerEntry.startDeviceTracking();
+
+<span class="hljs-keyword">const</span> canSign1 = ledgerEntry.canSign.value; <span class="hljs-comment">// false</span>
+
+<span class="hljs-comment">// connect Ledger and open app</span>
+
+<span class="hljs-keyword">const</span> canSign2 = ledgerEntry.canSign.value; <span class="hljs-comment">// true</span></code></pre>
+				<p>You can subscribe for updates</p>
+				<pre><code class="language-ts"><span class="hljs-keyword">const</span> ledgerEntry = <span class="hljs-keyword">new</span> LedgerSimpleAddressKeyringEntry();
+ledgerEntry.startDeviceTracking();
+
+ledgerEntry.canSign.updates.subscribe({
+  next: <span class="hljs-function"><span class="hljs-params">value</span> =&gt;</span> {
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"canSign is now"</span>, value);
+  }
+});</code></pre>
+				<p>or wait until a specific value is reached</p>
+				<pre><code class="language-ts"><span class="hljs-keyword">const</span> ledgerEntry = <span class="hljs-keyword">new</span> LedgerSimpleAddressKeyringEntry();
+ledgerEntry.startDeviceTracking();
+
+<span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">signWhenReady</span>(<span class="hljs-params"></span>) </span>{
+  <span class="hljs-keyword">await</span> ledgerEntry.canSign.waitFor(<span class="hljs-literal">true</span>);
+  <span class="hljs-comment">// canSign is now true. Proceed.</span>
+}</code></pre>
+				<p><code>deviceState</code> is very similar to <code>canSign</code> but Ledger specifig and a three state interface:
+				<code>LedgerState.Disconnected</code>, <code>LedgerState.Connected</code>, <code>LedgerState.IovAppOpen</code>.</p>
+				<p>First, make sure to <code>import { LedgerSimpleAddressKeyringEntry, LedgerState } from &quot;@iov/ledger-bns&quot;;</code>.</p>
+				<p>Check the current state:</p>
+				<pre><code class="language-ts"><span class="hljs-keyword">const</span> ledgerEntry = <span class="hljs-keyword">new</span> LedgerSimpleAddressKeyringEntry();
+ledgerEntry.startDeviceTracking();
+
+<span class="hljs-keyword">const</span> state1 = ledgerEntry.deviceState.value; <span class="hljs-comment">// LedgerState.Disconnected</span>
+
+<span class="hljs-comment">// connect and wait some time</span>
+<span class="hljs-keyword">const</span> state2 = ledgerEntry.deviceState.value; <span class="hljs-comment">// LedgerState.Connected</span>
+
+<span class="hljs-comment">// open app</span>
+<span class="hljs-keyword">const</span> state3 = ledgerEntry.deviceState.value; <span class="hljs-comment">// LedgerState.IovAppOpen</span></code></pre>
+				<p>Subscribe for updates:</p>
+				<pre><code class="language-ts"><span class="hljs-keyword">import</span> { LedgerSimpleAddressKeyringEntry, LedgerState } <span class="hljs-keyword">from</span> <span class="hljs-string">"@iov/ledger-bns"</span>;
+
+<span class="hljs-keyword">const</span> ledgerEntry = <span class="hljs-keyword">new</span> LedgerSimpleAddressKeyringEntry();
+ledgerEntry.startDeviceTracking();
+
+ledgerEntry.deviceState.updates.subscribe({
+  next: <span class="hljs-function"><span class="hljs-params">value</span> =&gt;</span> {
+    <span class="hljs-keyword">switch</span> (value) {
+      <span class="hljs-keyword">case</span> LedgerState.Disconnected:
+        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"Ledger disconnected"</span>);
+        <span class="hljs-keyword">break</span>;
+      <span class="hljs-keyword">case</span> LedgerState.Connected:
+        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"Ledger connected"</span>);
+        <span class="hljs-keyword">break</span>;
+      <span class="hljs-keyword">case</span> LedgerState.IovAppOpen:
+        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"IOV app open"</span>);
+        <span class="hljs-keyword">break</span>;
+    }
+  }
+});</code></pre>
+				<p>Wait until a specific value is reached:</p>
+				<pre><code class="language-ts"><span class="hljs-keyword">const</span> ledgerEntry = <span class="hljs-keyword">new</span> LedgerSimpleAddressKeyringEntry();
+ledgerEntry.startDeviceTracking();
+
+<span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">signWhenReady</span>(<span class="hljs-params"></span>) </span>{
+  <span class="hljs-keyword">await</span> ledgerEntry.deviceState.waitFor(LedgerState.IovAppOpen);
+  <span class="hljs-comment">// signing app open</span>
+}</code></pre>
+				<h2 id="internal-interfaces">Internal interfaces</h2>
+				<p>Those interfaces are for maintainers of the package only and are not exposed
+				outside of @iov/ledger-bns.</p>
+				<p>If you want to call the Ledger directly, you will need to
+					<a href="https://iov-one.github.io/iov-core-docs/latest/iov-ledger-bns/globals.html#connecttofirstledger">connectToFirstLedger</a> to get a transport,
+					which you can <a href="https://iov-one.github.io/iov-core-docs/latest/iov-ledger-bns/globals.html#getpublickeywithindex">getPublicKeyWithIndex</a>
+				or <a href="https://iov-one.github.io/iov-core-docs/latest/iov-ledger-bns/globals.html#signtransactionwithindex">signTransactionWithIndex</a>.</p>
+				<p>You can also try <code>yarn checkapp</code> to see events as you change apps on the Ledger,
+				which should detect when the proper app is opened and when you leave the app.</p>
+				<p>To run this code (or even <code>yarn test</code>), you must have the bns Ledger app
+					installed and open and connected to the computer running tests.
+					The tests will prompt you to confirm transactions as well, so when the tests
+				freeze, go hit those buttons on the Ledger.</p>
+				<h2 id="compatibility">Compatibility</h2>
+				<p>The code is compatible with <a href="https://github.com/iov-one/ledger-bns">https://github.com/iov-one/ledger-bns</a> v0.1.0.
+					In particular, it works with the app installed from <code>mvp1/samecrypto</code>.
+					Please follow the README there and install properly before running this code.
+				And make sure the versions match.</p>
+				<h2 id="api-documentation">API Documentation</h2>
+				<p><a href="https://iov-one.github.io/iov-core-docs/latest/iov-ledger-bns/">https://iov-one.github.io/iov-core-docs/latest/iov-ledger-bns/</a></p>
+				<h2 id="license">License</h2>
+				<p>This package is part of the IOV-Core repository, licensed under the Apache License 2.0
+				(see <a href="https://github.com/iov-one/iov-core/blob/master/NOTICE">NOTICE</a> and <a href="https://github.com/iov-one/iov-core/blob/master/LICENSE">LICENSE</a>).</p>
+			</div>
+		</div>
+		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
+			<nav class="tsd-navigation primary">
+				<ul>
+					<li class="globals  ">
+						<a href="globals.html"><em>Globals</em></a>
+					</li>
+				</ul>
+			</nav>
+			<nav class="tsd-navigation secondary menu-sticky">
+				<ul class="before-current">
+					<li class=" tsd-kind-enum">
+						<a href="enums/ledgerstate.html" class="tsd-kind-icon">Ledger<wbr>State</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="classes/ledgererrorresponse.html" class="tsd-kind-icon">Ledger<wbr>Error<wbr>Response</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="classes/ledgersimpleaddresskeyringentry.html" class="tsd-kind-icon">Ledger<wbr>Simple<wbr>Address<wbr>Keyring<wbr>Entry</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="classes/statetracker.html" class="tsd-kind-icon">State<wbr>Tracker</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#appversion" class="tsd-kind-icon">app<wbr>Version</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#checkandremovestatus" class="tsd-kind-icon">check<wbr>And<wbr>Remove<wbr>Status</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#connecttofirstledger" class="tsd-kind-icon">connect<wbr>ToFirst<wbr>Ledger</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#getfirstledgernanos" class="tsd-kind-icon">get<wbr>First<wbr>Ledger<wbr>NanoS</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#getpublickey" class="tsd-kind-icon">get<wbr>Public<wbr>Key</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#getpublickeywithindex" class="tsd-kind-icon">get<wbr>Public<wbr>Key<wbr>With<wbr>Index</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#sendchunks" class="tsd-kind-icon">send<wbr>Chunks</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#signtransaction" class="tsd-kind-icon">sign<wbr>Transaction</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#signtransactionwithindex" class="tsd-kind-icon">sign<wbr>Transaction<wbr>With<wbr>Index</a>
+					</li>
+				</ul>
+			</nav>
+		</div>
+	</div>
+</div>
+<footer class="with-border-bottom">
+	<div class="container">
+		<h2>Legend</h2>
+		<div class="tsd-legend-group">
+			<ul class="tsd-legend">
+				<li class="tsd-kind-module"><span class="tsd-kind-icon">Module</span></li>
+				<li class="tsd-kind-object-literal"><span class="tsd-kind-icon">Object literal</span></li>
+				<li class="tsd-kind-variable"><span class="tsd-kind-icon">Variable</span></li>
+				<li class="tsd-kind-function"><span class="tsd-kind-icon">Function</span></li>
+				<li class="tsd-kind-function tsd-has-type-parameter"><span class="tsd-kind-icon">Function with type parameter</span></li>
+				<li class="tsd-kind-index-signature"><span class="tsd-kind-icon">Index signature</span></li>
+				<li class="tsd-kind-type-alias"><span class="tsd-kind-icon">Type alias</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-enum"><span class="tsd-kind-icon">Enumeration</span></li>
+				<li class="tsd-kind-enum-member"><span class="tsd-kind-icon">Enumeration member</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-enum"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-enum"><span class="tsd-kind-icon">Method</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-interface"><span class="tsd-kind-icon">Interface</span></li>
+				<li class="tsd-kind-interface tsd-has-type-parameter"><span class="tsd-kind-icon">Interface with type parameter</span></li>
+				<li class="tsd-kind-constructor tsd-parent-kind-interface"><span class="tsd-kind-icon">Constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-interface"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-interface"><span class="tsd-kind-icon">Method</span></li>
+				<li class="tsd-kind-index-signature tsd-parent-kind-interface"><span class="tsd-kind-icon">Index signature</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-class"><span class="tsd-kind-icon">Class</span></li>
+				<li class="tsd-kind-class tsd-has-type-parameter"><span class="tsd-kind-icon">Class with type parameter</span></li>
+				<li class="tsd-kind-constructor tsd-parent-kind-class"><span class="tsd-kind-icon">Constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-class"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class"><span class="tsd-kind-icon">Method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class"><span class="tsd-kind-icon">Accessor</span></li>
+				<li class="tsd-kind-index-signature tsd-parent-kind-class"><span class="tsd-kind-icon">Index signature</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-constructor tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited accessor</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected accessor</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private accessor</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-static"><span class="tsd-kind-icon">Static property</span></li>
+				<li class="tsd-kind-call-signature tsd-parent-kind-class tsd-is-static"><span class="tsd-kind-icon">Static method</span></li>
+			</ul>
+		</div>
+	</div>
+</footer>
+<div class="container tsd-generator">
+	<p>Generated using <a href="http://typedoc.org/" target="_blank">TypeDoc</a></p>
+</div>
+<div class="overlay"></div>
+<script src="assets/js/main.js"></script>
+<script>if (location.protocol == 'file:') document.write('<script src="assets/js/search.js"><' + '/script>');</script>
+</body>
+</html>
